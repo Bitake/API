@@ -1,4 +1,5 @@
 # 目录
+## Bitake_demo文件夹 &nbsp; java/php 代码示例
 ## 1 &nbsp; 接入规范
 #### 1.1 &nbsp; 接入规范
 ## 2 &nbsp; 常见全局错误码
@@ -16,4 +17,3 @@
 #### 4.2 &nbsp; 出金历史记录
 #### 4.3 &nbsp; 删除未审核的出金记录
 
-## Bitake_demo文件夹 &nbsp; java/php 代码示例
