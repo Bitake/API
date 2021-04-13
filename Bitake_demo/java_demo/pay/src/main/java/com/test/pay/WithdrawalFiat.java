@@ -14,8 +14,10 @@ public class WithdrawalFiat {
 
     public static void main(String[] args) {
 //        withdrawal();
-        withdrawalHistory();
+//        withdrawalHistory();
 //        withdrawalDelete();
+//        withdrawalRate("CNY");
+        withdrawalOrderQuery("TEST1618221736");
     }
 
     /**
@@ -34,8 +36,11 @@ public class WithdrawalFiat {
         heads.put("app_id", Constant.app_id);
         Map<String, Object> param = new HashMap<>();
         param.put("merchantNo",Constant.merchant_no);//商户号
+        param.put("merchantOrderNo","TEST"+timestamp);//商户订单号
+        param.put("withdrawType",2);//出金类型 1 固定法币出金 2 固定USDT数量出金
         param.put("fiatCurrency","CNY");   //出金法币类型
-        param.put("amount",1000.0);  //出金法币数量
+//        param.put("amount",1000.0);  //出金法币数量
+        param.put("currencyCount",500.0);  //出金USDT数量
         param.put("customerId","110"); //用户标识 用于查询历史的查询条件
         param.put("accountName","测试"); //银行账户姓名
         param.put("bankNumber","535224124242");//银行卡号
@@ -50,7 +55,7 @@ public class WithdrawalFiat {
         param.put("type","1");                  //类型  1 正常  2 加急
         String return_url = HttpUtils.postJson(pay_url,param, heads);
         System.out.println(return_url);
-        //{"code":200,"message":"success"}
+        //{"code":200,"data":{"account":"345345245","accountName":"测试","amount":null,"bankAddress":"","bankCode":"","bankName":"中国银行","bankNumber":"535224124242","comeFrom":2,"createTime":null,"currencyCount":500.0,"currencyTypeId":null,"customerId":"110","fee":null,"fiatCurrency":"CNY","financialReviewTime":null,"iBank":"344244","id":null,"investorPassword":null,"merchantNo":"9357","merchantOrderNo":"TEST1618221736","orderNo":null,"refuseReason":null,"remarks":"","state":null,"subbranch":"北京西二旗分行","swiftCode":"","traderId":null,"traderReviewTime":null,"type":1,"userId":null,"withdrawType":2,"withdrawalRate":null},"message":"success"}
         JSONObject jsonObject = JSONObject.parseObject(return_url);
         if (jsonObject.getInteger("code") == 200){
             System.out.println("success");
@@ -81,6 +86,7 @@ public class WithdrawalFiat {
         param.put("currPage",1);//当前页(必传)
         param.put("pageSize",20);//每页多少条数据(必传)
 //        //搜索条件，不传时为所有记录
+        param.put("merchantOrderNo","TEST1618221736"); //商户订单号
 //        param.put("customerId","110"); //用户标识(可选)
 //        param.put("fiatCurrency","CNY");   //出金法币类型（可选）
 //        param.put("accountName","测试"); //银行账户姓名（可选）
@@ -92,7 +98,7 @@ public class WithdrawalFiat {
         System.out.println(pay_url);
         String return_url = HttpUtils.get(pay_url, heads);
         System.out.println(return_url);
-        //{"total":2,"code":200,"data":[{"account":"345345245","accountName":"测试","amount":1000.0,"bankAddress":"","bankCode":"","bankName":"中国银行","bankNumber":"535224124242","comeFrom":2,"createTime":"2020-12-29 17:10:42","currencyCount":null,"currencyTypeId":1,"customerId":"110","fee":null,"fiatCurrency":"CNY","financialReviewTime":null,"iBank":"344244","id":7,"investorPassword":null,"merchantNo":null,"orderNo":"WF1609233042438","refuseReason":null,"remarks":"","state":0,"subbranch":"北京西二旗分行","swiftCode":"","traderId":null,"traderReviewTime":null,"type":1,"userId":535,"withdrawalRate":null},{"account":null,"accountName":"接口测试","amount":1000.0,"bankAddress":null,"bankCode":null,"bankName":null,"bankNumber":null,"comeFrom":2,"createTime":"2020-12-28 14:57:15","currencyCount":1000.0,"currencyTypeId":1,"customerId":null,"fee":0.0,"fiatCurrency":"CNY","financialReviewTime":"2020-12-28 16:04:49","iBank":null,"id":5,"investorPassword":null,"merchantNo":null,"orderNo":"WF1609138635895","refuseReason":null,"remarks":null,"state":1,"subbranch":null,"swiftCode":null,"traderId":1,"traderReviewTime":null,"type":1,"userId":535,"withdrawalRate":1.0}],"pageSize":20,"message":"success","currentPage":1}
+        //{"total":1,"code":200,"data":[{"account":"345345245","accountName":"测试","amount":null,"bankAddress":"","bankCode":"","bankName":"中国银行","bankNumber":"535224124242","comeFrom":2,"createTime":"2021-04-12 18:02:17","currencyCount":500.0,"currencyTypeId":1,"customerId":"110","fee":null,"fiatCurrency":"CNY","financialReviewTime":null,"iBank":"344244","id":907,"investorPassword":null,"merchantNo":null,"merchantOrderNo":"TEST1618221736","orderNo":"WF1618221737454","refuseReason":null,"remarks":"","state":0,"subbranch":"北京西二旗分行","swiftCode":"","traderId":null,"traderReviewTime":null,"type":1,"userId":490,"withdrawType":2,"withdrawalRate":null}],"pageSize":20,"message":"success","currentPage":1}
         return return_url;
     }
 
@@ -120,6 +126,61 @@ public class WithdrawalFiat {
         String return_url = HttpUtils.get(pay_url, heads);
         System.out.println(return_url);
         //{"code":200,"message":"success"}
+        return return_url;
+    }
+
+
+    /**
+     * 获取出金汇率（估值）
+     * @param fiatCurrency 法币类型
+     * @return
+     */
+    public static String withdrawalRate(String fiatCurrency){
+        long timestamp = System.currentTimeMillis()/1000;
+        String pay_url = Constant.URL_ + "/api/recharge/customer/withdrawal/rate?timestamp="+timestamp;
+        Map<String, String> heads = new HashMap<>();
+        heads.put("content-type", "application/json");
+        String params = fiatCurrency + "&" + timestamp;
+        String access_key = HMACSHA1.hamcsha1(params.getBytes(), Constant.key.getBytes());
+        heads.put("access_key", access_key);
+        heads.put("app_id", Constant.app_id);
+        Map<String, Object> param = new HashMap<>();
+        param.put("fiatCurrency",fiatCurrency);//法币类型(必传)
+
+        for (Map.Entry<String, Object> entry : param.entrySet()) {
+            pay_url = pay_url + "&" +entry.getKey() + "=" + entry.getValue();
+        }
+        System.out.println(pay_url);
+        String return_url = HttpUtils.get(pay_url, heads);
+        System.out.println(return_url);
+        //{"code":200,"data":{"fiatCurrency":"CNY","withdrawalRate":6.69},"message":"success"}
+        return return_url;
+    }
+
+    /**
+     * 根据商户订单号查询出金订单
+     * @param merchantOrderNo 商户出金订单号
+     * @return
+     */
+    public static String withdrawalOrderQuery(String merchantOrderNo){
+        long timestamp = System.currentTimeMillis()/1000;
+        String pay_url = Constant.URL_ + "/api/recharge/customer/withdrawal/order/query?timestamp="+timestamp;
+        Map<String, String> heads = new HashMap<>();
+        heads.put("content-type", "application/json");
+        String params = Constant.merchant_no +"&" + merchantOrderNo + "&" + timestamp;
+        String access_key = HMACSHA1.hamcsha1(params.getBytes(), Constant.key.getBytes());
+        heads.put("access_key", access_key);
+        heads.put("app_id", Constant.app_id);
+        Map<String, Object> param = new HashMap<>();
+        param.put("merchantNo",Constant.merchant_no);//商户号(必传)
+        param.put("merchantOrderNo",merchantOrderNo);//商户出金订单号(必传)
+        for (Map.Entry<String, Object> entry : param.entrySet()) {
+            pay_url = pay_url + "&" +entry.getKey() + "=" + entry.getValue();
+        }
+        System.out.println(pay_url);
+        String return_url = HttpUtils.get(pay_url, heads);
+        System.out.println(return_url);
+        //{"code":200,"data":{"account":"345345245","accountName":"测试","amount":null,"bankAddress":"","bankCode":"","bankName":"中国银行","bankNumber":"535224124242","comeFrom":2,"createTime":"2021-04-12 18:02:17","currencyCount":500.0,"currencyTypeId":1,"customerId":"110","fee":null,"fiatCurrency":"CNY","financialReviewTime":null,"iBank":"344244","id":907,"investorPassword":null,"merchantNo":null,"merchantOrderNo":"TEST1618221736","orderNo":"WF1618221737454","refuseReason":null,"remarks":"","state":0,"subbranch":"北京西二旗分行","swiftCode":"","traderId":null,"traderReviewTime":null,"type":1,"userId":490,"withdrawType":2,"withdrawalRate":null},"message":"success"}
         return return_url;
     }
 }
